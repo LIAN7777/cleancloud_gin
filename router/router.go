@@ -27,5 +27,6 @@ func Router() *gin.Engine {
 	//测试用接口
 	test := r.Group("test")
 	test.POST("file", controller.New().FileTranTest)
+	test.POST("comment", controller.New().QueueTest)
 	return r
 }

@@ -2,6 +2,9 @@ package controller
 
 import (
 	"GinProject/dao"
+	dto "GinProject/dto/user"
+	"GinProject/response"
+	"GinProject/service"
 	"github.com/gin-gonic/gin"
 	"io"
 	"log"
@@ -98,4 +101,18 @@ func (con Controllertest) FileTranTest(c *gin.Context) {
 		offset += int64(n)
 	}
 	c.Writer.Flush()
+}
+
+func (con Controllertest) QueueTest(c *gin.Context) {
+	comment := &dto.CommentForm{}
+	err := c.BindJSON(comment)
+	if err != nil {
+		response.RspError(c, response.CodeInvalidJson)
+		return
+	}
+	if ok := service.AddComment(comment); ok {
+		response.RspSuccess(c, "add comment success")
+		return
+	}
+	response.RspError(c, response.CodeServerBusy)
 }
