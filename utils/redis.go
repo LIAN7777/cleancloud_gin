@@ -13,6 +13,7 @@ func InitClient() error {
 		Addr:     "59.110.54.159:6379",
 		Password: "020109", // no password set
 		DB:       0,        // use default DB
+		PoolSize: 10,       // connection pool size
 	})
 
 	_, err := Rdb.Ping().Result()

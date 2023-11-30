@@ -19,6 +19,7 @@ func TestInitClient(t *testing.T) {
 
 func TestRedisOp(t *testing.T) {
 	err := InitClient()
+	defer Client.Close()
 	if err != nil {
 		fmt.Print("wrong")
 	} else {
