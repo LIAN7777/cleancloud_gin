@@ -110,7 +110,7 @@ func (con Controllertest) QueueTest(c *gin.Context) {
 		response.RspError(c, response.CodeInvalidJson)
 		return
 	}
-	if ok := service.AddComment(comment); ok {
+	if ok := service.PublishComment(comment); ok {
 		response.RspSuccess(c, "add comment success")
 		return
 	}

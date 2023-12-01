@@ -21,8 +21,8 @@ func init() {
 	if err != nil {
 		log.Print("rabbitmq link error")
 	}
-	// 启动goroutine监听队列
-	go service.StartConsumer("comment_queue", service.PrintComment)
+	// 启动消费者服务
+	service.StartConsumerService()
 }
 
 func main() {

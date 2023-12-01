@@ -1,7 +1,6 @@
 package service
 
 import (
-	"fmt"
 	"github.com/rabbitmq/amqp091-go"
 	"log"
 	"sync"
@@ -54,6 +53,16 @@ func StartConsumer(name string, handler func(msg []byte)) {
 	wg.Wait()
 }
 
-func PrintComment(msg []byte) {
-	fmt.Print(string(msg))
+// StartConsumerService 为每个消费者启动一个goroutine监听队列
+func StartConsumerService() {
+	// 添加评论
+	go StartConsumer("comment_queue", AddComment)
+	// 添加点赞
+	go StartConsumer("thumb_queue", AddBlogThumb)
+	// 向用户发送评论消息
+	go StartConsumer("comment_queue2", ReceiveComment)
 }
+
+//func PrintComment(msg []byte) {
+//	fmt.Print(string(msg))
+//}

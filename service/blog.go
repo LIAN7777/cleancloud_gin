@@ -5,7 +5,9 @@ import (
 	"GinProject/query"
 	"GinProject/utils"
 	"context"
+	"encoding/json"
 	"golang.org/x/sync/singleflight"
+	"log"
 	"strconv"
 	"time"
 )
@@ -102,4 +104,100 @@ func UpdateBlog(blog *model.Blog) bool {
 		tx.Commit()
 		return true
 	}
+}
+
+func GetBlogThumb(id string) int64 {
+	//先查询Redis
+	res, err := utils.Client.Get("cache:blog:thumb:" + id).Result()
+	if err == nil {
+		count, _ := strconv.Atoi(res)
+		return int64(count)
+	}
+	//Redis无数据,查MySQL
+	ctx := context.Background()
+	dThumb := query.Thumb
+	blogId, _ := strconv.Atoi(id)
+	count, err := dThumb.WithContext(ctx).Where(dThumb.BlogID.Eq(int64(blogId))).Count()
+	if err != nil {
+		return 0
+	}
+	//写入Redis缓存
+	utils.Client.Set("cache:blog:thumb:"+id, count, time.Minute*30)
+	//返回值
+	return count
+}
+
+func PublishBlogThumb(thumb *model.Thumb) bool {
+	//先查看是否存在Redis，若存在则将Redis值自增，方便查询
+	blogId := strconv.Itoa(int(thumb.BlogID))
+	err := utils.Client.Get("cache:blog:thumb:" + blogId).Err()
+	if err == nil {
+		//存在redis，自增
+		utils.Client.Incr("cache:blog:thumb:" + blogId)
+	}
+	//向rabbitmq发送消息，消费者消费后新增数据
+	err = utils.Publish("amq.direct", "thumb", thumb)
+	if err != nil {
+		return false
+	}
+	return true
+}
+
+func AddBlogThumb(msg []byte) {
+	thumb := &model.Thumb{}
+	err := json.Unmarshal(msg, thumb)
+	if err != nil {
+		log.Print("thumb format error:", err)
+	}
+	err = query.Thumb.WithContext(context.Background()).Create(thumb)
+	if err != nil {
+		log.Print("add thumb error")
+		//TODO:重新投递消息
+	}
+}
+
+func GetBlogByUserFavorite(userId string) []interface{} {
+	var blogs []interface{}
+	var idSet []string
+	//先到Redis中查询用户收藏的博客id
+	res, err := utils.Client.SMembers("cache:user:favorite:" + userId).Result()
+	if err == nil && cap(res) != 0 {
+		idSet = res
+	} else {
+		//Redis中不存在，则到MySQL查
+		dFavor := query.Favorite
+		id, _ := strconv.Atoi(userId)
+		favors, err := dFavor.WithContext(context.Background()).Where(dFavor.UserID.Eq(int64(id))).Find()
+		if err != nil {
+			return nil
+		}
+		//blogId写入缓存
+		for _, favor := range favors {
+			idSet = append(idSet, strconv.Itoa(int(favor.BlogID)))
+		}
+		err = utils.Client.SAdd("cache:user:favorite:"+userId, idSet).Err()
+		if err != nil {
+			log.Print("user favor cache add fail")
+		}
+	}
+	//根据博客id查询博客
+	for _, blogId := range idSet {
+		//先在Redis中查询指定id的博客
+		blog, err := utils.RedisGetModel("cache:blog:"+blogId, model.Blog{})
+		if err == nil {
+			blogs = append(blogs, blog)
+			continue
+		}
+		//未查询到则到MySQL中查
+		id, _ := strconv.Atoi(blogId)
+		blog, err = query.Blog.WithContext(context.Background()).Where(query.Blog.BlogID.Eq(int64(id))).First()
+		if err == nil {
+			blogs = append(blogs, blog)
+			//写入缓存
+			if ok := utils.RedisSetModel("cache:blog:"+blogId, blog); !ok {
+				log.Print("add blog cache fail")
+			}
+		}
+	}
+	return blogs
 }

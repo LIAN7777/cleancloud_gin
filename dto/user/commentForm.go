@@ -1,7 +1,8 @@
 package dto
 
 type CommentForm struct {
-	UserId  int64  `json:"userId"`
-	BlogId  int64  `json:"blogId"`
-	Content string `json:"content"`
+	UserId   int64  `json:"user_id"`
+	BlogId   int64  `json:"blog_id"`
+	Content  string `json:"content"`
+	UserName string `json:"user_name"`
 }

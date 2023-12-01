@@ -37,3 +37,29 @@ func (b BlogController) UpdateBlog(c *gin.Context) {
 		response.RspSuccess(c, "update blog error !")
 	}
 }
+
+func (b BlogController) AddThumb(c *gin.Context) {
+	var thumb model.Thumb
+	err := c.BindJSON(&thumb)
+	if err != nil {
+		response.RspError(c, response.CodeInvalidJson)
+		return
+	}
+	if ok := service.PublishBlogThumb(&thumb); ok {
+		response.RspSuccess(c, "add thumb success !")
+	} else {
+		response.RspSuccess(c, "add thumb error")
+	}
+}
+
+func (b BlogController) GetThumb(c *gin.Context) {
+	blogId := c.Param("blog_id")
+	count := service.GetBlogThumb(blogId)
+	response.RspSuccess(c, gin.H{
+		"thumbs": count,
+	})
+}
+
+func (b BlogController) GetBlogByUserFavor(c *gin.Context) {
+	response.RspSuccess(c, service.GetBlogByUserFavorite(c.Param("user_id")))
+}
