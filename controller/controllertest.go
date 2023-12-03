@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"time"
 )
 
 type Controllertest struct {
@@ -115,4 +116,9 @@ func (con Controllertest) QueueTest(c *gin.Context) {
 		return
 	}
 	response.RspError(c, response.CodeServerBusy)
+}
+
+func (con Controllertest) LimiterTest(c *gin.Context) {
+	time.Sleep(time.Millisecond * 50)
+	c.String(http.StatusOK, "limiter test")
 }

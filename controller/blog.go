@@ -63,3 +63,7 @@ func (b BlogController) GetThumb(c *gin.Context) {
 func (b BlogController) GetBlogByUserFavor(c *gin.Context) {
 	response.RspSuccess(c, service.GetBlogByUserFavorite(c.Param("user_id")))
 }
+
+func (b BlogController) GetBlogByUserId(c *gin.Context) {
+	response.RspSuccess(c, service.GetBlogByUserId(c.Param("user_id")))
+}

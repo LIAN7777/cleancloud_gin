@@ -201,3 +201,53 @@ func GetBlogByUserFavorite(userId string) []interface{} {
 	}
 	return blogs
 }
+
+func GetBlogByUserId(userId string) []interface{} {
+	var idSet []string
+	var blogRes []interface{}
+	//查redis用户的博客idSet
+	res, err := utils.Client.SMembers("cache:user:blog:" + userId).Result()
+	if err == nil && cap(res) != 0 {
+		idSet = res
+	} else {
+		//没查到，查MySQL
+		q := query.Blog
+		ctx := context.Background()
+		id, _ := strconv.Atoi(userId)
+		blogs, err := q.WithContext(ctx).Where(q.UserID.Eq(int64(id))).Find()
+		if err != nil {
+			return nil
+		}
+		for _, blog := range blogs {
+			blogId := strconv.Itoa(int(blog.BlogID))
+			idSet = append(idSet, blogId)
+			//将每个博客写入缓存
+			utils.RedisSetModel("cache:blog:"+blogId, blog)
+			blogRes = append(blogRes, blog)
+		}
+		//idSet存入redis
+		utils.Client.SAdd("cache:user:blog:"+userId, idSet)
+		//直接返回结果
+		return blogRes
+	}
+	//redis中有idSet缓存根据idSet查询博客
+	for _, id := range idSet {
+		//先查redis
+		blog, err := utils.RedisGetModel("cache:blog:"+id, model.Blog{})
+		if blog != nil && err == nil {
+			blogRes = append(blogRes, blog)
+		} else {
+			//查MySQL
+			q := query.Blog
+			ctx := context.Background()
+			blogId, _ := strconv.Atoi(id)
+			blog, err = q.WithContext(ctx).Where(q.BlogID.Eq(int64(blogId))).First()
+			if err != nil {
+				blogRes = append(blogRes, blog)
+				//把博客存入redis
+				utils.RedisSetModel("cache:blog:"+id, blog)
+			}
+		}
+	}
+	return blogRes
+}

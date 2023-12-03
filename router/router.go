@@ -4,6 +4,7 @@ import (
 	"GinProject/controller"
 	"GinProject/middleware"
 	"github.com/gin-gonic/gin"
+	"time"
 )
 
 func Router() *gin.Engine {
@@ -26,10 +27,19 @@ func Router() *gin.Engine {
 	blog.GET("/thumb/:blog_id", controller.Blog().GetThumb)
 	blog.POST("/addthumb", controller.Blog().AddThumb)
 	blog.GET("/favorite/:user_id", controller.Blog().GetBlogByUserFavor)
+	blog.GET("/user/:user_id", controller.Blog().GetBlogByUserId)
 
 	//测试用接口
+	//限流测试
+	limiter := middleware.LimiterMiddleWare(5, 5, time.Second, 2, time.Second)
+	limiter2 := middleware.LimiterMiddleWare(2, 2, time.Second, 3, time.Second)
 	test := r.Group("test")
+	test2 := r.Group("test2")
+	test2.Use(limiter2)
+	test.Use(limiter)
 	test.POST("file", controller.New().FileTranTest)
 	test.POST("comment", controller.New().QueueTest)
+	test.GET("limiter", controller.New().LimiterTest)
+	test2.GET("limiter2", controller.New().LimiterTest)
 	return r
 }
