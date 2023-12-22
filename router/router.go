@@ -21,13 +21,23 @@ func Router() *gin.Engine {
 	v2.Use(middleware.AuthMiddleware())
 	v2.GET("/test", controller.New().JwtAuthTest)
 
-	blog := v1.Group("blog")
+	blog := v1.Group("/blog")
 	blog.GET("/:id", controller.Blog().GetBlogById)
 	blog.POST("/update", controller.Blog().UpdateBlog)
 	blog.GET("/thumb/:blog_id", controller.Blog().GetThumb)
 	blog.POST("/addthumb", controller.Blog().AddThumb)
 	blog.GET("/favorite/:user_id", controller.Blog().GetBlogByUserFavor)
 	blog.GET("/user/:user_id", controller.Blog().GetBlogByUserId)
+
+	admin := v1.Group("/admin")
+	admin.POST("/login", controller.Admin().Login)
+	admin.GET("/:id", controller.Admin().GetAdminById)
+	admin.POST("/update_info", controller.Admin().UpdateAdmin)
+	admin.POST("/update_psw", controller.Admin().UpdateAdminPsw)
+
+	comment := v1.Group("/comment")
+	comment.GET("/:id", controller.Comment().GetCommentById)
+	comment.GET("/blog/:blog_id", controller.Comment().GetCommentByBlog)
 
 	//测试用接口
 	//限流测试

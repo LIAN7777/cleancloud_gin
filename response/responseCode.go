@@ -20,6 +20,10 @@ const (
 
 	CodeBlogNotExist RspCode = 1012
 	CodeInvalidJson  RspCode = 1013
+
+	CodeAdminNotExist   RspCode = 1014
+	CodeUpdateError             = 1015
+	CodeCommentNotExist         = 1016
 )
 
 var msgFlags = map[RspCode]string{
@@ -40,7 +44,11 @@ var msgFlags = map[RspCode]string{
 
 	CodeBlogNotExist: "博客不存在",
 
-	CodeInvalidJson: "json格式有误",
+	CodeInvalidJson:   "json格式有误",
+	CodeAdminNotExist: "管理员不存在",
+
+	CodeUpdateError:     "更新失败",
+	CodeCommentNotExist: "评论不存在",
 }
 
 func (c RspCode) Msg() string {

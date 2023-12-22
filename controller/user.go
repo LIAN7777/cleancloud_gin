@@ -22,7 +22,7 @@ func (u UserController) Login(c *gin.Context) {
 		response.RspError(c, response.CodeInvalidParams)
 		return
 	}
-	ok := service.Login(loginform.LoginKey, loginform.Password)
+	ok := service.UserLogin(loginform.LoginKey, loginform.Password)
 	if ok {
 		token, err := utils.GenerateToken(loginform.LoginKey, loginform.Password)
 		if err != nil {
@@ -62,7 +62,7 @@ func (u UserController) Register(c *gin.Context) {
 
 func (u UserController) Logout(c *gin.Context) {
 	userKey := c.PostForm("userKey")
-	if ok := service.Logout(userKey); ok {
+	if ok := service.UserLogout(userKey); ok {
 		response.RspSuccess(c, "user logout success !")
 	} else {
 		response.RspError(c, response.CodeNotLogin)

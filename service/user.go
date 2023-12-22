@@ -12,7 +12,7 @@ import (
 	"time"
 )
 
-func Login(loginKey string, password string) bool {
+func UserLogin(loginKey string, password string) bool {
 	user1 := getByTelephone(loginKey)
 	user2 := getByEmail(loginKey)
 	if user1 != nil {
@@ -122,7 +122,7 @@ func Register(form *dto.RegisterForm) bool {
 	}
 }
 
-func Logout(userKey string) bool {
+func UserLogout(userKey string) bool {
 	err := utils.Client.Del("login:jwt:" + userKey).Err()
 	if err != nil {
 		return false

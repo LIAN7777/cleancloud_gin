@@ -8,6 +8,7 @@ import (
 	"context"
 	"encoding/json"
 	"log"
+	"strconv"
 	"time"
 )
 
@@ -40,4 +41,65 @@ func AddComment(msg []byte) {
 	if err != nil {
 		log.Print("send comment message fail")
 	}
+}
+
+func GetCommentById(id string) interface{} {
+	//使用Redis分布式锁
+	ctx := context.Background()
+	lock := utils.NewRedisLock("lock:comment", utils.Client)
+	//上锁
+	_ = lock.Lock(ctx)
+	//函数返回前释放锁
+	defer func(lock *utils.RedisLock) {
+		_ = lock.Unlock()
+	}(lock)
+	//先查Redis
+	comment, err := utils.RedisGetModel("cache:comment:"+id, model.Comment{})
+	if err == nil {
+		return comment
+	}
+	//查Mysql
+	C := query.Comment
+	Id, _ := strconv.Atoi(id)
+	comment, err = C.WithContext(ctx).Where(C.CommentID.Eq(int64(Id))).First()
+	if err != nil {
+		//缓存空值
+		utils.Client.Set("cache:comment:"+id, "", time.Minute*30)
+		return nil
+	} else {
+		utils.RedisSetModel("cache:comment:"+id, comment)
+		return comment
+	}
+}
+
+func GetCommentByBlog(blogId string) []interface{} {
+	var idSet []string    //blog对应的comment idSet
+	var res []interface{} //comment最终结果
+	//先查redis是否有idSet
+	ids, err := utils.Client.SMembers("cache:comment:blog:" + blogId).Result()
+	if err == nil && cap(ids) != 0 {
+		idSet = ids
+	} else {
+		//不存在idSet 查MySQL
+		C := query.Comment
+		ctx := context.Background()
+		BlogId, _ := strconv.Atoi(blogId)
+		comments, err := C.WithContext(ctx).Where(C.BlogID.Eq(int64(BlogId))).Find()
+		if err != nil {
+			return nil
+		}
+		for _, comment := range comments {
+			idSet = append(idSet, strconv.Itoa(int(comment.CommentID)))
+			res = append(res, comment)
+		}
+		//idSet存入Redis
+		utils.Client.SAdd("cache:comment:blog:"+blogId, idSet)
+		//返回结果
+		return res
+	}
+	//idSet存在，根据每个id分别找到comment
+	for _, i := range idSet {
+		res = append(res, GetCommentById(i))
+	}
+	return res
 }
