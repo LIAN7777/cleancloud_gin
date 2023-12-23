@@ -61,6 +61,8 @@ func StartConsumerService() {
 	go StartConsumer("thumb_queue", AddBlogThumb)
 	// 向用户发送评论消息
 	go StartConsumer("comment_queue2", ReceiveComment)
+	// 添加新待审博客
+	go StartConsumer("new_blog", AddUnreviewedBlog)
 }
 
 //func PrintComment(msg []byte) {

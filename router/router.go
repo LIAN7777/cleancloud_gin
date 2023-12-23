@@ -28,6 +28,7 @@ func Router() *gin.Engine {
 	blog.POST("/addthumb", controller.Blog().AddThumb)
 	blog.GET("/favorite/:user_id", controller.Blog().GetBlogByUserFavor)
 	blog.GET("/user/:user_id", controller.Blog().GetBlogByUserId)
+	blog.POST("/publish", controller.Blog().PublishBlog)
 
 	admin := v1.Group("/admin")
 	admin.POST("/login", controller.Admin().Login)
@@ -38,6 +39,9 @@ func Router() *gin.Engine {
 	comment := v1.Group("/comment")
 	comment.GET("/:id", controller.Comment().GetCommentById)
 	comment.GET("/blog/:blog_id", controller.Comment().GetCommentByBlog)
+	comment.GET("/reported", controller.Comment().GetReportedComment)
+	comment.DELETE("/delete/:id", controller.Comment().DeleteCommentById)
+	comment.GET("/change_status/:id", controller.Comment().ChangeStatus)
 
 	//测试用接口
 	//限流测试

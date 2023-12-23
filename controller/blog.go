@@ -1,6 +1,7 @@
 package controller
 
 import (
+	dto "GinProject/dto/blog"
 	"GinProject/model"
 	"GinProject/response"
 	"GinProject/service"
@@ -66,4 +67,18 @@ func (b BlogController) GetBlogByUserFavor(c *gin.Context) {
 
 func (b BlogController) GetBlogByUserId(c *gin.Context) {
 	response.RspSuccess(c, service.GetBlogByUserId(c.Param("user_id")))
+}
+
+func (b BlogController) PublishBlog(c *gin.Context) {
+	blog := &dto.BlogForm{}
+	err := c.BindJSON(blog)
+	if err != nil {
+		response.RspError(c, response.CodeInvalidJson)
+		return
+	}
+	if ok := service.PublishBlog(blog); ok {
+		response.RspSuccess(c, "publish blog success !")
+		return
+	}
+	response.RspError(c, response.CodeBlogPublishFail)
 }

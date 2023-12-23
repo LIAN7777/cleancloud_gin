@@ -6,11 +6,21 @@ import (
 	"GinProject/query"
 	"GinProject/utils"
 	"context"
+	"database/sql/driver"
 	"encoding/json"
 	"log"
 	"strconv"
 	"time"
 )
+
+type BoolValue bool
+
+func (b BoolValue) Value() (driver.Value, error) {
+	if b {
+		return true, nil
+	}
+	return false, nil
+}
 
 func PublishComment(comment *dto.CommentForm) bool {
 	err := utils.Publish("amq.direct", "comment", comment)
@@ -32,11 +42,13 @@ func AddComment(msg []byte) {
 	comment.Status = &[]uint8{1}
 	ctx := context.Background()
 	dComment := query.Comment
+	//评论存入数据库
 	err = dComment.WithContext(ctx).Create(comment)
 	if err != nil {
 		log.Print("add comment fail:caused by\n", err)
 		return
 	}
+	//发送通知给用户有新评论
 	err = utils.Publish("amq.direct", "comment_message", comment)
 	if err != nil {
 		log.Print("send comment message fail")
@@ -102,4 +114,46 @@ func GetCommentByBlog(blogId string) []interface{} {
 		res = append(res, GetCommentById(i))
 	}
 	return res
+}
+
+func GetReportedComment() []*model.Comment {
+	ctx := context.Background()
+	C := query.Comment
+	comments, err := C.WithContext(ctx).Where(C.Status.Eq(BoolValue(false))).Find()
+	if err != nil {
+		return nil
+	} else {
+		return comments
+	}
+}
+
+func DeleteCommentById(id int64) bool {
+	ctx := context.Background()
+	C := query.Comment
+	_, err := C.WithContext(ctx).Where(C.CommentID.Eq(id)).Delete()
+	if err != nil {
+		return false
+	} else {
+		return true
+	}
+}
+
+func ChangeStatus(id int64) bool {
+	ctx := context.Background()
+	C := query.Comment
+	comment, err := C.WithContext(ctx).Where(C.CommentID.Eq(id)).First()
+	if err != nil {
+		return false
+	}
+	s := *comment.Status
+	if s[0] == 1 {
+		*comment.Status = []uint8{0}
+	} else {
+		*comment.Status = []uint8{1}
+	}
+	err = C.WithContext(ctx).Where(C.CommentID.Eq(id)).Save(comment)
+	if err != nil {
+		return false
+	}
+	return true
 }

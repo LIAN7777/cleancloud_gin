@@ -4,6 +4,7 @@ import (
 	"GinProject/response"
 	"GinProject/service"
 	"github.com/gin-gonic/gin"
+	"strconv"
 )
 
 type CommentController struct {
@@ -28,6 +29,28 @@ func (com CommentController) GetCommentByBlog(c *gin.Context) {
 	comments := service.GetCommentByBlog(id)
 	if comments != nil {
 		response.RspSuccess(c, comments)
+	} else {
+		response.RspError(c, response.CodeCommentNotExist)
+	}
+}
+
+func (com CommentController) GetReportedComment(c *gin.Context) {
+	response.RspSuccess(c, service.GetReportedComment())
+}
+
+func (com CommentController) DeleteCommentById(c *gin.Context) {
+	id, _ := strconv.Atoi(c.Param("id"))
+	if ok := service.DeleteCommentById(int64(id)); ok {
+		response.RspSuccess(c, "delete success !")
+	} else {
+		response.RspError(c, response.CodeCommentNotExist)
+	}
+}
+
+func (com CommentController) ChangeStatus(c *gin.Context) {
+	id, _ := strconv.Atoi(c.Param("id"))
+	if ok := service.ChangeStatus(int64(id)); ok {
+		response.RspSuccess(c, "change success !")
 	} else {
 		response.RspError(c, response.CodeCommentNotExist)
 	}

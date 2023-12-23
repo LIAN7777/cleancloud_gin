@@ -1,6 +1,7 @@
 package service
 
 import (
+	dto "GinProject/dto/blog"
 	"GinProject/model"
 	"GinProject/query"
 	"GinProject/utils"
@@ -250,4 +251,31 @@ func GetBlogByUserId(userId string) []interface{} {
 		}
 	}
 	return blogRes
+}
+
+func PublishBlog(blog *dto.BlogForm) bool {
+	err := utils.Publish("amq.direct", "blog", blog)
+	if err != nil {
+		return false
+	}
+	return true
+}
+
+func AddUnreviewedBlog(msg []byte) {
+	blog := &model.Reportedblog{}
+	err := json.Unmarshal(msg, blog)
+	if err != nil {
+		log.Print("blog format error")
+		return
+	}
+	//TODO:AI审核
+	status := "1"
+	blog.Status = &status
+	ctx := context.Background()
+	B := query.Reportedblog
+	err = B.WithContext(ctx).Create(blog)
+	if err != nil {
+		log.Print("add new blog fail:caused by\n", err)
+		return
+	}
 }
