@@ -1,6 +1,7 @@
 package controller
 
 import (
+	dto "GinProject/dto/user"
 	"GinProject/response"
 	"GinProject/service"
 	"github.com/gin-gonic/gin"
@@ -54,4 +55,18 @@ func (com CommentController) ChangeStatus(c *gin.Context) {
 	} else {
 		response.RspError(c, response.CodeCommentNotExist)
 	}
+}
+
+func (com CommentController) PublishComment(c *gin.Context) {
+	comment := &dto.CommentForm{}
+	err := c.BindJSON(comment)
+	if err != nil {
+		response.RspError(c, response.CodeInvalidJson)
+		return
+	}
+	if ok := service.PublishComment(comment); ok {
+		response.RspSuccess(c, "add comment success")
+		return
+	}
+	response.RspError(c, response.CodeServerBusy)
 }

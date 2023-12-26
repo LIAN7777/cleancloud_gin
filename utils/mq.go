@@ -52,3 +52,28 @@ func Publish(exchange string, queueOrRoute string, data interface{}) error {
 	}
 	return nil
 }
+
+func DelayPublish(exchange string, queueOrRoute string, data interface{}, delay int64) error {
+	messageData, err := json.Marshal(&data)
+	if err != nil {
+		return err
+	}
+	ctx := context.Background()
+	headers := amqp091.Table{"x-delay": delay}
+	err = Channel.PublishWithContext(
+		ctx,
+		exchange,
+		queueOrRoute,
+		false,
+		false,
+		amqp091.Publishing{
+			Headers:     headers,
+			ContentType: "application/json",
+			Body:        messageData,
+		},
+	)
+	if err != nil {
+		return err
+	}
+	return nil
+}

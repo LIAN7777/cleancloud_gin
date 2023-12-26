@@ -7,6 +7,7 @@ import (
 	"GinProject/utils"
 	"context"
 	"encoding/json"
+	"github.com/go-redis/redis"
 	"golang.org/x/sync/singleflight"
 	"log"
 	"strconv"
@@ -278,4 +279,78 @@ func AddUnreviewedBlog(msg []byte) {
 		log.Print("add new blog fail:caused by\n", err)
 		return
 	}
+}
+
+func AddBlogHits(id string) bool {
+	//增加博客点击量；考虑并发问题，采用分布式锁
+	lock := utils.NewRedisLock("lock:blogHit", utils.Client)
+	ctx := context.Background()
+	_ = lock.Lock(ctx)
+	defer func(lock *utils.RedisLock) {
+		_ = lock.Unlock()
+	}(lock)
+	//添加点击量
+	_, err := utils.Client.ZIncrBy("hotlist:blog", 1, id).Result()
+	if err != nil {
+		return false
+	}
+	_ = lock.Unlock()
+	//添加一分钟内的点击量
+	//为了和删除点击量互斥，需要上锁
+	lock1 := utils.NewRedisLock("lock:blogHit_delete", utils.Client)
+	_ = lock1.Lock(ctx)
+	_, err = utils.Client.ZIncrBy("hotlist_delete:blog", 1, id).Result()
+	_ = lock1.Unlock()
+	return true
+}
+
+func GetHotBlogs(limit int) []interface{} {
+	//获取限定数量的热门博客
+	//获取热门博客的id集合
+	res, err := utils.Client.ZRevRangeByScore("hotlist:blog", redis.ZRangeBy{
+		Min:   "0",
+		Max:   "inf",
+		Count: int64(limit),
+	}).Result()
+	if err != nil {
+		return nil
+	}
+	//根据id集合去获取博客信息
+	var blogs []interface{}
+	for _, blogId := range res {
+		blogs = append(blogs, GetBlogById(blogId))
+	}
+	return blogs
+}
+
+func DecrBlogHits() {
+	//启用定时任务，每分钟收集一次博客点击量，发送到延时队列中，一小时后删除
+	for range time.Tick(time.Minute) {
+		//上锁
+		ctx := context.Background()
+		lock := utils.NewRedisLock("lock:blogHit_delete", utils.Client)
+		_ = lock.Lock(ctx)
+		//获取一分钟内点击量
+		res, _ := utils.Client.ZRangeWithScores("hotlist_delete:blog", 0, -1).Result()
+		//删除一分钟内的点击量
+		_ = utils.Client.Del("hotlist_delete:blog")
+		_ = lock.Unlock()
+		if res != nil {
+			//res不为空，则将每个键发送到延时队列
+			for _, z := range res {
+				message := dto.BlogHits{BlogId: z.Member, Hits: int64(z.Score)}
+				_ = utils.DelayPublish("delayed_exchange", "blog_hits", message, 3600000)
+			}
+		}
+	}
+}
+
+func DeleteBlogHits(msg []byte) {
+	hits := &dto.BlogHits{}
+	err := json.Unmarshal(msg, hits)
+	if err != nil {
+		log.Print("blogHits json invalid")
+	}
+	//在真正的博客点击量中减少点击数
+	_, err = utils.Client.ZIncrBy("hotlist:blog", -float64(hits.Hits), hits.BlogId.(string)).Result()
 }

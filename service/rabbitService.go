@@ -63,8 +63,8 @@ func StartConsumerService() {
 	go StartConsumer("comment_queue2", ReceiveComment)
 	// 添加新待审博客
 	go StartConsumer("new_blog", AddUnreviewedBlog)
+	// 启动定时任务，更新每分钟点击量到延时队列
+	go DecrBlogHits()
+	// 减少点击量
+	go StartConsumer("blog_hits", DeleteBlogHits)
 }
-
-//func PrintComment(msg []byte) {
-//	fmt.Print(string(msg))
-//}

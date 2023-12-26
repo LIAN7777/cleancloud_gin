@@ -6,6 +6,7 @@ import (
 	"GinProject/response"
 	"GinProject/service"
 	"github.com/gin-gonic/gin"
+	"strconv"
 )
 
 type BlogController struct {
@@ -81,4 +82,18 @@ func (b BlogController) PublishBlog(c *gin.Context) {
 		return
 	}
 	response.RspError(c, response.CodeBlogPublishFail)
+}
+
+func (b BlogController) AddBlogHits(c *gin.Context) {
+	if ok := service.AddBlogHits(c.Param("id")); ok {
+		response.RspSuccess(c, "add blog hits success !")
+	} else {
+		response.RspError(c, response.CodeBlogNotExist)
+	}
+}
+
+func (b BlogController) GetHotBlogs(c *gin.Context) {
+	limit, _ := strconv.Atoi(c.Param("limit"))
+	blogs := service.GetHotBlogs(limit)
+	response.RspSuccess(c, blogs)
 }
