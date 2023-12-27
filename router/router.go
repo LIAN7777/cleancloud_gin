@@ -13,6 +13,8 @@ func Router() *gin.Engine {
 	v1.GET("/", controller.New().Test)
 	v1.GET("/city/:city", controller.New().GetCity)
 	v1.GET("/user/:userId", controller.New().GetUserById)
+	v1.GET("/sign/:id", controller.User().SignIn)
+	v1.POST("/get_sign", controller.User().GetUserSign)
 	v1.POST("/login", controller.User().Login)
 	v1.POST("/logout", controller.User().Logout)
 	v1.POST("/email", controller.User().SendEmail)

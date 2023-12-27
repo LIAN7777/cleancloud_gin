@@ -6,6 +6,7 @@ import (
 	"GinProject/service"
 	"GinProject/utils"
 	"github.com/gin-gonic/gin"
+	"strconv"
 )
 
 type UserController struct {
@@ -67,4 +68,20 @@ func (u UserController) Logout(c *gin.Context) {
 	} else {
 		response.RspError(c, response.CodeNotLogin)
 	}
+}
+
+func (u UserController) SignIn(c *gin.Context) {
+	id := c.Param("id")
+	if ok := service.UserSignIn(id); ok {
+		response.RspSuccess(c, "sign in success !")
+	} else {
+		response.RspError(c, response.CodeInternalError)
+	}
+}
+
+func (u UserController) GetUserSign(c *gin.Context) {
+	id := c.PostForm("id")
+	day, _ := strconv.Atoi(c.PostForm("day"))
+	res := service.GetUserSign(id, int64(day))
+	response.RspSuccess(c, res)
 }

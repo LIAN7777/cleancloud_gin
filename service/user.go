@@ -130,3 +130,21 @@ func UserLogout(userKey string) bool {
 		return true
 	}
 }
+
+func UserSignIn(userId string) bool {
+	//用户签到实现
+	today := int64(time.Now().Day())
+	err := utils.Client.SetBit("sign:user:"+userId, today, 1).Err()
+	if err != nil {
+		return false
+	}
+	return true
+}
+
+func GetUserSign(userId string, day int64) int64 {
+	res, err := utils.Client.GetBit("sign:user:"+userId, day).Result()
+	if err != nil {
+		return 0
+	}
+	return res
+}
