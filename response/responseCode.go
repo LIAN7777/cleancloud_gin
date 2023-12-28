@@ -26,6 +26,8 @@ const (
 	CodeCommentNotExist RspCode = 1016
 	CodeBlogPublishFail RspCode = 1017
 	CodeInternalError   RspCode = 1018
+	CodeThumbFail       RspCode = 1019
+	CodeGetHotError     RspCode = 1020
 )
 
 var msgFlags = map[RspCode]string{
@@ -54,6 +56,8 @@ var msgFlags = map[RspCode]string{
 
 	CodeBlogPublishFail: "博客发布失败",
 	CodeInternalError:   "内部错误",
+	CodeThumbFail:       "点赞失败",
+	CodeGetHotError:     "获取热门失败",
 }
 
 func (c RspCode) Msg() string {

@@ -8,6 +8,7 @@ import (
 	"context"
 	"database/sql/driver"
 	"encoding/json"
+	"github.com/go-redis/redis"
 	"log"
 	"strconv"
 	"time"
@@ -139,6 +140,7 @@ func DeleteCommentById(id int64) bool {
 }
 
 func ChangeStatus(id int64) bool {
+	//改变评论状态
 	ctx := context.Background()
 	C := query.Comment
 	comment, err := C.WithContext(ctx).Where(C.CommentID.Eq(id)).First()
@@ -156,4 +158,35 @@ func ChangeStatus(id int64) bool {
 		return false
 	}
 	return true
+}
+
+func AddCommentThumb(commentId string, blogId string) bool {
+	//添加评论点赞
+	key := "hotlist:comment:blogId:" + blogId
+	err := utils.Client.ZIncrBy(key, 1, commentId).Err()
+	if err != nil {
+		return false
+	}
+	return true
+}
+
+func GetHotComments(blogId string, count int64) []interface{} {
+	//获取热门评论
+	key := "hotlist:comment:blogId:" + blogId
+	ids, err := utils.Client.ZRevRangeByScore(key, redis.ZRangeBy{
+		Min:   "0",
+		Max:   "inf",
+		Count: count,
+	}).Result()
+	if err != nil {
+		return nil
+	}
+	if len(ids) > 0 {
+		var res []interface{}
+		for _, id := range ids {
+			res = append(res, GetCommentById(id))
+		}
+		return res
+	}
+	return nil
 }

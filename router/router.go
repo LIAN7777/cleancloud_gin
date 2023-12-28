@@ -47,6 +47,8 @@ func Router() *gin.Engine {
 	comment.DELETE("/delete/:id", controller.Comment().DeleteCommentById)
 	comment.GET("/change_status/:id", controller.Comment().ChangeStatus)
 	comment.POST("/publish", controller.Comment().PublishComment)
+	comment.GET("/hot/:blog_id", controller.Comment().GetHotComment)
+	comment.POST("add_thumb", controller.Comment().AddCommentThumb)
 
 	follow := v1.Group("/follow")
 	follow.GET("/user/:id", controller.Follow().GetFollowByUser)

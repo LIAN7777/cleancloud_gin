@@ -70,3 +70,23 @@ func (com CommentController) PublishComment(c *gin.Context) {
 	}
 	response.RspError(c, response.CodeServerBusy)
 }
+
+func (com CommentController) AddCommentThumb(c *gin.Context) {
+	blogId := c.PostForm("blogId")
+	commentId := c.PostForm("commentId")
+	if ok := service.AddCommentThumb(commentId, blogId); ok {
+		response.RspSuccess(c, "add comment thumb success !")
+	} else {
+		response.RspError(c, response.CodeThumbFail)
+	}
+}
+
+func (com CommentController) GetHotComment(c *gin.Context) {
+	id := c.Param("blog_id")
+	comments := service.GetHotComments(id, 3)
+	if comments != nil {
+		response.RspSuccess(c, comments)
+	} else {
+		response.RspError(c, response.CodeGetHotError)
+	}
+}
