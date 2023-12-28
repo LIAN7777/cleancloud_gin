@@ -48,10 +48,15 @@ func Router() *gin.Engine {
 	comment.GET("/change_status/:id", controller.Comment().ChangeStatus)
 	comment.POST("/publish", controller.Comment().PublishComment)
 	comment.GET("/hot/:blog_id", controller.Comment().GetHotComment)
-	comment.POST("add_thumb", controller.Comment().AddCommentThumb)
+	comment.POST("/add_thumb", controller.Comment().AddCommentThumb)
 
 	follow := v1.Group("/follow")
 	follow.GET("/user/:id", controller.Follow().GetFollowByUser)
+
+	userMessage := v1.Group("user_message")
+	userMessage.GET("/user/:id", controller.UserMessage().GetMessageByUser)
+	userMessage.POST("/add", controller.UserMessage().AddUserMessage)
+	userMessage.DELETE("/delete/:id", controller.UserMessage().DeleteUserMessage)
 
 	//测试用接口
 	//限流测试

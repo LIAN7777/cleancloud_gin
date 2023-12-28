@@ -33,3 +33,35 @@ func ReceiveComment(msg []byte) {
 		log.Print("receive user message fail")
 	}
 }
+
+func GetMessageByUser(userId int64) []*model.Usermessage {
+	ctx := context.Background()
+	M := query.Usermessage
+	messages, err := M.WithContext(ctx).Where(M.UserID.Eq(userId)).Find()
+	if err != nil {
+		return nil
+	}
+	return messages
+}
+
+func AddUserMessage(message *model.Usermessage) bool {
+	ctx := context.Background()
+	M := query.Usermessage
+	now := time.Now().Format("2006-01-02 15:04:05")
+	message.Time = &now
+	err := M.WithContext(ctx).Create(message)
+	if err != nil {
+		return false
+	}
+	return true
+}
+
+func DeleteUserMessage(id int64) bool {
+	ctx := context.Background()
+	M := query.Usermessage
+	_, err := M.WithContext(ctx).Where(M.UserMessageID.Eq(id)).Delete()
+	if err != nil {
+		return false
+	}
+	return true
+}
