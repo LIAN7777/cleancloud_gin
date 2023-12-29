@@ -52,6 +52,14 @@ func Router() *gin.Engine {
 
 	follow := v1.Group("/follow")
 	follow.GET("/user/:id", controller.Follow().GetFollowByUser)
+	follow.POST("/add", controller.Follow().AddFollow)
+	follow.POST("/delete", controller.Follow().DeleteFollow)
+	follow.POST("/judge", controller.Follow().JudgeFollow)
+
+	favor := v1.Group("/favor")
+	favor.POST("/add", controller.Favor().AddFavor)
+	favor.POST("/delete", controller.Favor().DeleteFavor)
+	favor.POST("/judge", controller.Favor().JudgeFavor)
 
 	userMessage := v1.Group("user_message")
 	userMessage.GET("/user/:id", controller.UserMessage().GetMessageByUser)

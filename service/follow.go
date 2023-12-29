@@ -2,6 +2,7 @@ package service
 
 import (
 	dto "GinProject/dto/follow"
+	"GinProject/model"
 	"GinProject/query"
 	"context"
 )
@@ -40,4 +41,34 @@ func GetFollowByUser(userId int64) []*dto.FollowForm {
 		}
 	}
 	return res
+}
+
+func AddFollow(follow *model.Follow) bool {
+	ctx := context.Background()
+	F := query.Follow
+	err := F.WithContext(ctx).Create(follow)
+	if err != nil {
+		return false
+	}
+	return true
+}
+
+func DeleteFollow(follow *model.Follow) bool {
+	ctx := context.Background()
+	F := query.Follow
+	_, err := F.WithContext(ctx).Delete(follow)
+	if err != nil {
+		return false
+	}
+	return true
+}
+
+func JudgeFollow(follow *model.Follow) bool {
+	ctx := context.Background()
+	F := query.Follow
+	count, err := F.WithContext(ctx).Where(F.UserID.Eq(follow.UserID), F.FollowID.Eq(follow.FollowID)).Count()
+	if err != nil {
+		return false
+	}
+	return count > 0
 }
