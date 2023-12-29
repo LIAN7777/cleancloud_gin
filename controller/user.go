@@ -119,3 +119,25 @@ func (u UserController) UserAdminAuth(c *gin.Context) {
 	res := service.UserAdminAuth(int64(id))
 	response.RspSuccess(c, res)
 }
+
+func (u UserController) UpdateUserInfo(c *gin.Context) {
+	form := &dto.UserUpdateForm{}
+	err := c.BindJSON(form)
+	if err != nil {
+		response.RspError(c, response.CodeInvalidJson)
+		return
+	}
+	res := service.UpdateUserInfo(form)
+	response.RspSuccess(c, res)
+}
+
+func (u UserController) UpdateUserPsw(c *gin.Context) {
+	form := &dto.UserPswForm{}
+	err := c.BindJSON(form)
+	if err != nil {
+		response.RspError(c, response.CodeInvalidJson)
+		return
+	}
+	res := service.UpdateUserPsw(form)
+	response.RspSuccess(c, res)
+}

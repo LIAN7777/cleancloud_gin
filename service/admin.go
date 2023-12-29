@@ -43,10 +43,7 @@ func UpdateAdminInfo(form *dto.AdminUpdateForm) bool {
 	A := query.Admin
 	ctx := context.Background()
 	_, err := A.WithContext(ctx).Where(A.AdminID.Eq(form.Id)).Updates(form)
-	if err != nil {
-		return false
-	}
-	return true
+	return err == nil
 }
 
 func UpdateAdminPassword(form *dto.AdminPswForm) bool {
@@ -60,8 +57,5 @@ func UpdateAdminPassword(form *dto.AdminPswForm) bool {
 		return false
 	}
 	_, err = A.WithContext(ctx).Where(A.AdminID.Eq(form.Id)).Update(A.Password, form.NewPassword)
-	if err != nil {
-		return false
-	}
-	return true
+	return err == nil
 }

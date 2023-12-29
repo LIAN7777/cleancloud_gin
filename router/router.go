@@ -28,6 +28,8 @@ func Router() *gin.Engine {
 	user.GET("/change_status/:id", controller.User().ChangeUserStatus)
 	user.GET("/real_name/:id", controller.User().UserRealName)
 	user.GET("/auth/:id", controller.User().UserAdminAuth)
+	user.POST("/update_info", controller.User().UpdateUserInfo)
+	user.POST("/update_psw", controller.User().UpdateUserPsw)
 
 	blog := v1.Group("/blog")
 	blog.GET("/:id", controller.Blog().GetBlogById)
@@ -67,10 +69,15 @@ func Router() *gin.Engine {
 	favor.POST("/delete", controller.Favor().DeleteFavor)
 	favor.POST("/judge", controller.Favor().JudgeFavor)
 
-	userMessage := v1.Group("user_message")
+	userMessage := v1.Group("/user_message")
 	userMessage.GET("/user/:id", controller.UserMessage().GetMessageByUser)
 	userMessage.POST("/add", controller.UserMessage().AddUserMessage)
 	userMessage.DELETE("/delete/:id", controller.UserMessage().DeleteUserMessage)
+
+	adminMessage := v1.Group("/admin_message")
+	adminMessage.GET("/admin/:id", controller.AdminMessage().GetMessageByAdmin)
+	adminMessage.POST("/add", controller.AdminMessage().AddAdminMessage)
+	adminMessage.DELETE("/delete/:id", controller.AdminMessage().DeleteAdminMessage)
 
 	//测试用接口
 	//限流测试

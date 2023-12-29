@@ -195,3 +195,24 @@ func UserAdminAuth(id int64) bool {
 	_, err := U.WithContext(ctx).Where(U.UserID.Eq(id)).Update(U.IsAdmin, 1)
 	return err == nil
 }
+
+func UpdateUserInfo(form *dto.UserUpdateForm) bool {
+	ctx := context.Background()
+	U := query.User
+	_, err := U.WithContext(ctx).Where(U.UserID.Eq(form.Id)).Updates(form)
+	return err == nil
+}
+
+func UpdateUserPsw(form *dto.UserPswForm) bool {
+	ctx := context.Background()
+	U := query.User
+	user, err := U.WithContext(ctx).Where(U.UserID.Eq(form.Id)).First()
+	if err != nil {
+		return false
+	}
+	if *user.Password != form.OldPassword {
+		return false
+	}
+	_, err = U.WithContext(ctx).Where(U.UserID.Eq(form.Id)).Update(U.Password, form.NewPassword)
+	return err == nil
+}
