@@ -148,3 +148,50 @@ func GetUserSign(userId string, day int64) int64 {
 	}
 	return res
 }
+
+func GetUserById(id int64) *model.User {
+	U := query.User
+	ctx := context.Background()
+	user, err := U.WithContext(ctx).Where(U.UserID.Eq(id)).First()
+	if err != nil {
+		return nil
+	}
+	return user
+}
+
+func DeleteUser(id int64) bool {
+	U := query.User
+	ctx := context.Background()
+	_, err := U.WithContext(ctx).Where(U.UserID.Eq(id)).Delete()
+	return err == nil
+}
+
+func ChangeUserStatus(id int64) bool {
+	U := query.User
+	ctx := context.Background()
+	user, err := U.WithContext(ctx).Where(U.UserID.Eq(id)).Select(U.State).First()
+	if err != nil {
+		return false
+	}
+	if *user.State == "正常" {
+		_, err = U.WithContext(ctx).Where(U.UserID.Eq(id)).Update(U.State, "封禁")
+		return err == nil
+	} else {
+		_, err = U.WithContext(ctx).Where(U.UserID.Eq(id)).Update(U.State, "正常")
+		return err == nil
+	}
+}
+
+func UserRealName(id int64) bool {
+	U := query.User
+	ctx := context.Background()
+	_, err := U.WithContext(ctx).Where(U.UserID.Eq(id)).Update(U.IsReal, 1)
+	return err == nil
+}
+
+func UserAdminAuth(id int64) bool {
+	U := query.User
+	ctx := context.Background()
+	_, err := U.WithContext(ctx).Where(U.UserID.Eq(id)).Update(U.IsAdmin, 1)
+	return err == nil
+}

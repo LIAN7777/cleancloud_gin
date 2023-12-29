@@ -85,3 +85,37 @@ func (u UserController) GetUserSign(c *gin.Context) {
 	res := service.GetUserSign(id, int64(day))
 	response.RspSuccess(c, res)
 }
+
+func (u UserController) GetUserById(c *gin.Context) {
+	id, _ := strconv.Atoi(c.Param("id"))
+	user := service.GetUserById(int64(id))
+	if user != nil {
+		response.RspSuccess(c, user)
+	} else {
+		response.RspError(c, response.CodeUserNotExist)
+	}
+}
+
+func (u UserController) DeleteUser(c *gin.Context) {
+	id, _ := strconv.Atoi(c.Param("id"))
+	res := service.DeleteUser(int64(id))
+	response.RspSuccess(c, res)
+}
+
+func (u UserController) ChangeUserStatus(c *gin.Context) {
+	id, _ := strconv.Atoi(c.Param("id"))
+	res := service.ChangeUserStatus(int64(id))
+	response.RspSuccess(c, res)
+}
+
+func (u UserController) UserRealName(c *gin.Context) {
+	id, _ := strconv.Atoi(c.Param("id"))
+	res := service.UserRealName(int64(id))
+	response.RspSuccess(c, res)
+}
+
+func (u UserController) UserAdminAuth(c *gin.Context) {
+	id, _ := strconv.Atoi(c.Param("id"))
+	res := service.UserAdminAuth(int64(id))
+	response.RspSuccess(c, res)
+}
