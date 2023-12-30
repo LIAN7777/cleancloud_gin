@@ -69,6 +69,15 @@ func Router() *gin.Engine {
 	favor.POST("/delete", controller.Favor().DeleteFavor)
 	favor.POST("/judge", controller.Favor().JudgeFavor)
 
+	report := v1.Group("/report")
+	report.POST("/add", controller.Report().AddReport)
+	report.POST("/judge", controller.Report().JudgeReport)
+
+	reportedBlog := v1.Group("/reported_blog")
+	reportedBlog.POST("/add", controller.ReportedBlog().AddReportedBlog)
+	reportedBlog.GET("/:id", controller.ReportedBlog().GetReportedById)
+	reportedBlog.DELETE("/delete/:id", controller.ReportedBlog().DeleteReported)
+
 	userMessage := v1.Group("/user_message")
 	userMessage.GET("/user/:id", controller.UserMessage().GetMessageByUser)
 	userMessage.POST("/add", controller.UserMessage().AddUserMessage)
