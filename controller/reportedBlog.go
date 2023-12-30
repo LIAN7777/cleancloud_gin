@@ -1,6 +1,7 @@
 package controller
 
 import (
+	dto "GinProject/dto/report"
 	"GinProject/response"
 	"GinProject/service"
 	"github.com/gin-gonic/gin"
@@ -44,4 +45,25 @@ func (r ReportedBlogController) DeleteReported(c *gin.Context) {
 	id, _ := strconv.Atoi(c.Param("id"))
 	res := service.DeleteReportedBlog(int64(id))
 	response.RspSuccess(c, res)
+}
+
+func (r ReportedBlogController) AddAssistComment(c *gin.Context) {
+	comment := &dto.AssistantComment{}
+	err := c.BindJSON(comment)
+	if err != nil {
+		response.RspError(c, response.CodeInvalidJson)
+		return
+	}
+	res, err := service.AddAssistantComment(comment)
+	if err != nil {
+		response.RspSuccess(c, gin.H{
+			"res":     false,
+			"message": err.Error(),
+		})
+		return
+	}
+	response.RspSuccess(c, gin.H{
+		"res":     res,
+		"message": "add comment success !",
+	})
 }

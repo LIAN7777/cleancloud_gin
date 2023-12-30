@@ -109,8 +109,13 @@ func (u UserController) ChangeUserStatus(c *gin.Context) {
 }
 
 func (u UserController) UserRealName(c *gin.Context) {
-	id, _ := strconv.Atoi(c.Param("id"))
-	res := service.UserRealName(int64(id))
+	realName := &dto.RealName{}
+	err := c.BindJSON(realName)
+	if err != nil {
+		response.RspError(c, response.CodeInvalidJson)
+		return
+	}
+	res := service.UserRealName(realName)
 	response.RspSuccess(c, res)
 }
 

@@ -1,6 +1,7 @@
 package service
 
 import (
+	dto "GinProject/dto/report"
 	"GinProject/model"
 	"GinProject/query"
 	"GinProject/utils"
@@ -71,4 +72,26 @@ func GetReportedBlogById(id int64) *model.Reportedblog {
 		return nil
 	}
 	return blog
+}
+
+func AddAssistantComment(comment *dto.AssistantComment) (bool, error) {
+	ctx := context.Background()
+	R := query.Reportedblog
+	blog, err := R.WithContext(ctx).Where(R.RBlogID.Eq(comment.BlogId)).First()
+	if err != nil {
+		return false, errors.New("blog not exist")
+	}
+	if blog.AssistantComment == nil {
+		_, err = R.WithContext(ctx).Where(R.RBlogID.Eq(comment.BlogId)).Update(R.AssistantComment, comment.Comment)
+		if err != nil {
+			return false, errors.New("add comment fail")
+		}
+		return true, nil
+	}
+	newComment := *blog.AssistantComment + "\n" + comment.Comment
+	_, err = R.WithContext(ctx).Where(R.RBlogID.Eq(comment.BlogId)).Update(R.AssistantComment, newComment)
+	if err != nil {
+		return false, errors.New("add comment fail")
+	}
+	return true, nil
 }

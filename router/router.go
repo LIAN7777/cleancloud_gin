@@ -26,7 +26,7 @@ func Router() *gin.Engine {
 	user.POST("/email", controller.User().SendEmail)
 	user.POST("/register", controller.User().Register)
 	user.GET("/change_status/:id", controller.User().ChangeUserStatus)
-	user.GET("/real_name/:id", controller.User().UserRealName)
+	user.POST("/real_name", controller.User().UserRealName)
 	user.GET("/auth/:id", controller.User().UserAdminAuth)
 	user.POST("/update_info", controller.User().UpdateUserInfo)
 	user.POST("/update_psw", controller.User().UpdateUserPsw)
@@ -77,6 +77,7 @@ func Router() *gin.Engine {
 	reportedBlog.POST("/add", controller.ReportedBlog().AddReportedBlog)
 	reportedBlog.GET("/:id", controller.ReportedBlog().GetReportedById)
 	reportedBlog.DELETE("/delete/:id", controller.ReportedBlog().DeleteReported)
+	reportedBlog.POST("/assist_comment", controller.ReportedBlog().AddAssistComment)
 
 	userMessage := v1.Group("/user_message")
 	userMessage.GET("/user/:id", controller.UserMessage().GetMessageByUser)

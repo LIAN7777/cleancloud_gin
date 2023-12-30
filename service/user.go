@@ -182,10 +182,16 @@ func ChangeUserStatus(id int64) bool {
 	}
 }
 
-func UserRealName(id int64) bool {
+func UserRealName(real *dto.RealName) bool {
 	U := query.User
 	ctx := context.Background()
-	_, err := U.WithContext(ctx).Where(U.UserID.Eq(id)).Update(U.IsReal, 1)
+	isReal := int64(1)
+	user := model.User{
+		IsReal:   &isReal,
+		RealName: &real.Name,
+		RealID:   &real.RealId,
+	}
+	_, err := U.WithContext(ctx).Where(U.UserID.Eq(real.Id)).Updates(user)
 	return err == nil
 }
 
