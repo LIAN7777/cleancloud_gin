@@ -7,21 +7,26 @@ import (
 	"GinProject/utils"
 	"context"
 	"github.com/go-gomail/gomail"
+	"github.com/go-redis/redis"
 	"log"
 	"math/rand"
+	"strconv"
 	"time"
 )
 
-func UserLogin(loginKey string, password string) bool {
+func UserLogin(loginKey string, password string) int64 {
 	user1 := getByTelephone(loginKey)
 	user2 := getByEmail(loginKey)
 	if user1 != nil {
-		return *user1.Password == password
+		if *user1.Password == password {
+			return user1.UserID
+		}
 	} else if user2 != nil {
-		return *user2.Password == password
-	} else {
-		return false
+		if *user2.Password == password {
+			return user2.UserID
+		}
 	}
+	return 0
 }
 
 func getByTelephone(tel string) *model.User {
@@ -221,4 +226,34 @@ func UpdateUserPsw(form *dto.UserPswForm) bool {
 	}
 	_, err = U.WithContext(ctx).Where(U.UserID.Eq(form.Id)).Update(U.Password, form.NewPassword)
 	return err == nil
+}
+
+func AddUserPosition(id string, lat float64, lon float64) bool {
+	key := "geo:user"
+	err := utils.Client.GeoAdd(key, &redis.GeoLocation{
+		Name:      id,
+		Longitude: lon,
+		Latitude:  lat,
+	}).Err()
+	return err == nil
+}
+
+func GetUserByRange(geo *dto.GeoRange) []*model.User {
+	//获取用户附近的用户
+	key := "geo:user"
+	id := strconv.Itoa(int(geo.UserId))
+	res, err := utils.Client.GeoRadiusByMember(key, id, &redis.GeoRadiusQuery{
+		Radius: geo.Radius,
+		Unit:   "km",
+		Count:  geo.Count,
+	}).Result()
+	if err != nil {
+		return nil
+	}
+	var users []*model.User
+	for _, pos := range res {
+		id, _ := strconv.Atoi(pos.Name)
+		users = append(users, GetUserById(int64(id)))
+	}
+	return users
 }

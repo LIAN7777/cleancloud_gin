@@ -30,6 +30,7 @@ func Router() *gin.Engine {
 	user.GET("/auth/:id", controller.User().UserAdminAuth)
 	user.POST("/update_info", controller.User().UpdateUserInfo)
 	user.POST("/update_psw", controller.User().UpdateUserPsw)
+	user.POST("/geo", controller.User().GetUserByRange)
 
 	blog := v1.Group("/blog")
 	blog.GET("/:id", controller.Blog().GetBlogById)
@@ -101,5 +102,6 @@ func Router() *gin.Engine {
 	test.POST("comment", controller.New().QueueTest)
 	test.GET("limiter", controller.New().LimiterTest)
 	test2.GET("limiter2", controller.New().LimiterTest)
+	test.POST("/geo", controller.New().AddUserPosition)
 	return r
 }

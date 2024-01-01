@@ -17,14 +17,18 @@ func User() UserController {
 }
 
 func (u UserController) Login(c *gin.Context) {
+	//log.Printf("IP地址：" + c.ClientIP())
 	loginform := &dto.LoginForm{}
 	err := c.BindJSON(loginform)
 	if err != nil {
-		response.RspError(c, response.CodeInvalidParams)
+		response.RspError(c, response.CodeInvalidJson)
 		return
 	}
-	ok := service.UserLogin(loginform.LoginKey, loginform.Password)
-	if ok {
+	userId := service.UserLogin(loginform.LoginKey, loginform.Password)
+	if userId > 0 {
+		//加入用户地理位置
+		_ = service.AddUserPosition(strconv.FormatInt(userId, 10), loginform.Lat, loginform.Lon)
+		//生成登录jwt
 		token, err := utils.GenerateToken(loginform.LoginKey, loginform.Password)
 		if err != nil {
 			response.RspError(c, response.CodeTokenGenerateFail)
@@ -145,4 +149,15 @@ func (u UserController) UpdateUserPsw(c *gin.Context) {
 	}
 	res := service.UpdateUserPsw(form)
 	response.RspSuccess(c, res)
+}
+
+func (u UserController) GetUserByRange(c *gin.Context) {
+	geo := &dto.GeoRange{}
+	err := c.BindJSON(geo)
+	if err != nil {
+		response.RspError(c, response.CodeInvalidJson)
+		return
+	}
+	users := service.GetUserByRange(geo)
+	response.RspSuccess(c, users)
 }

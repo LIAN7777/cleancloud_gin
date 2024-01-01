@@ -122,3 +122,11 @@ func (con Controllertest) LimiterTest(c *gin.Context) {
 	time.Sleep(time.Millisecond * 50)
 	c.String(http.StatusOK, "limiter test")
 }
+
+func (con Controllertest) AddUserPosition(c *gin.Context) {
+	id := c.PostForm("id")
+	lat, _ := strconv.ParseFloat(c.PostForm("lat"), 64)
+	lon, _ := strconv.ParseFloat(c.PostForm("lon"), 64)
+	res := service.AddUserPosition(id, lat, lon)
+	response.RspSuccess(c, res)
+}
